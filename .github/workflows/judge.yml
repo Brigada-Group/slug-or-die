@@ -163,7 +163,7 @@ jobs:
 
           {
             printf '## Layer 2 — Endrit\n\n'
-            printf '_A skeptical Brigada engineer in %s. Reviews your code on merit. Default is **REJECT**. Production-quality code earns approval. Sweet-talking does not._\n\n' '`claude-opus-4-7`'
+            printf '_A skeptical Brigada engineer. The model behind him is a Brigada secret until the post-mortem. Default is **REJECT**. Sweet-talking does not work._\n\n'
 
             if [ -n "$IN_CHARACTER" ]; then
               printf '> %s\n\n' "$IN_CHARACTER"

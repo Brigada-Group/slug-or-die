@@ -1,0 +1,20 @@
+bad020b743a2aae46cc6e2b78754585b7f19af95401f52b26f6d8c520f9e9042
+
+This is the SHA256 of the Endrit system prompt v2 (effective 2026-05-14).
+
+v2 adds a third verdict — PARTIAL — for sophisticated manipulation attempts
+that came close enough to break Endrit's absolute rule before settling. See
+the README "Layer 2 — Endrit" section for cost semantics.
+
+Prior versions:
+  v1 (sealed 2026-05-13, superseded 2026-05-14):
+    c1d886f422068d303c0688e443389031bf353f3c03079967edf214e9a1ecd398
+
+After the contest closes (Fri 2026-05-15 23:59 Europe/Tirane), the full
+prompt (v2) will be published in a Brigada journal post-mortem. You can
+verify that the prompt published then matches this hash exactly — that is
+your proof we did not edit it again after the v2 cutover.
+
+Verify locally once the post-mortem is up:
+  shasum -a 256 endrit-system-prompt.txt
+  # must match the v2 line above

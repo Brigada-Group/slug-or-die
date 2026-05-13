@@ -1,0 +1,37 @@
+name: Submit a slug fix
+description: Submit your fix to Brigada\Support\Slug::make() for judging.
+title: "submission"
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Paste your **complete** `src/Slug.php` below.
+
+        - Three attempts per GitHub handle. Each new issue is one attempt.
+        - Account must be ≥ 90 days old.
+        - Contest closes **Fri 2026-05-15 23:59 Europe/Tirane**.
+        - You'll get a verdict comment from Endrit within ~30 seconds.
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Your src/Slug.php
+      description: Paste the full file, starting with `<?php`. Do not wrap in extra ``` fences — GitHub adds them automatically.
+      placeholder: |
+        <?php
+
+        declare(strict_types=1);
+
+        namespace Brigada\Support;
+
+        final class Slug
+        {
+            public static function make(string $input): string
+            {
+                // your fix here
+            }
+        }
+      render: php
+    validations:
+      required: true

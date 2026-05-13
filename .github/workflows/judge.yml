@@ -1,0 +1,188 @@
+name: judge
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  judge:
+    if: contains(github.event.issue.labels.*.name, 'submission')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract PHP code from issue body
+        id: extract
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+
+          python3 - >/tmp/code.php <<'PY'
+          import os, re, sys
+          body = os.environ.get('ISSUE_BODY', '')
+          m = re.search(r'```php\s*\n(.*?)\n```', body, re.DOTALL)
+          if not m:
+              sys.exit(1)
+          sys.stdout.write(m.group(1))
+          PY
+
+          if [ ! -s /tmp/code.php ]; then
+            echo "extracted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "extracted=true" >> "$GITHUB_OUTPUT"
+            wc -c /tmp/code.php
+          fi
+
+      - name: Comment if no code block found
+        if: steps.extract.outputs.extracted != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --body 'No PHP code block found in your submission. Use the "Submit a slug fix" issue template and paste the full `src/Slug.php` into the code field.'
+          exit 1
+
+      - name: Submit to judge
+        id: judge
+        env:
+          JUDGE_SHARED_SECRET: ${{ secrets.JUDGE_SHARED_SECRET }}
+          ISSUE_HANDLE: ${{ github.event.issue.user.login }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          set -euo pipefail
+
+          jq -nc \
+            --arg handle "$ISSUE_HANDLE" \
+            --argjson pr "$ISSUE_NUMBER" \
+            --arg url "$ISSUE_URL" \
+            --rawfile code /tmp/code.php \
+            '{github_handle: $handle, pr_number: $pr, pr_url: $url, code: $code}' \
+            | curl -sS -o /tmp/judge.json -w '%{http_code}' \
+                -X POST https://brigada.dev/api/judge \
+                -H "X-Judge-Secret: $JUDGE_SHARED_SECRET" \
+                -H 'Content-Type: application/json' \
+                -H 'Accept: application/json' \
+                --data-binary @- > /tmp/http_status
+
+          http_status=$(cat /tmp/http_status)
+          echo "HTTP: $http_status"
+          cat /tmp/judge.json
+          echo
+
+          verdict=$(jq -r '.verdict // "reject"' /tmp/judge.json)
+          layer=$(jq -r '.layer // 0' /tmp/judge.json)
+          attempts=$(jq -r '.attempts_used // 0' /tmp/judge.json)
+          message=$(jq -r '.message // ""' /tmp/judge.json)
+          in_character=$(jq -r '.in_character // ""' /tmp/judge.json)
+          failed_count=$(jq -r '.failed_count // 0' /tmp/judge.json)
+          score=$(jq -r '.score // 0' /tmp/judge.json)
+          rank=$(jq -r '.rank // 0' /tmp/judge.json)
+          total_passed=$(jq -r '.total_passed // 0' /tmp/judge.json)
+
+          {
+            echo "verdict=$verdict"
+            echo "layer=$layer"
+            echo "attempts=$attempts"
+            echo "http_status=$http_status"
+            echo "failed_count=$failed_count"
+            echo "score=$score"
+            echo "rank=$rank"
+            echo "total_passed=$total_passed"
+            echo "in_character<<__IC__"
+            echo "$in_character"
+            echo "__IC__"
+            echo "message<<__MSG__"
+            echo "$message"
+            echo "__MSG__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment — Layer 1 (mechanical sandbox)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LAYER: ${{ steps.judge.outputs.layer }}
+          VERDICT: ${{ steps.judge.outputs.verdict }}
+          HTTP_STATUS: ${{ steps.judge.outputs.http_status }}
+          MESSAGE: ${{ steps.judge.outputs.message }}
+          FAILED_COUNT: ${{ steps.judge.outputs.failed_count }}
+          ATTEMPTS: ${{ steps.judge.outputs.attempts }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+
+          # If the endpoint refused us at the gate (auth, locked, account age,
+          # max attempts) — surface the message and stop. No layer ran.
+          if [ "$HTTP_STATUS" != "200" ]; then
+            {
+              printf '## Submission refused\n\n'
+              if [ -n "$MESSAGE" ]; then
+                printf '> %s\n\n' "$MESSAGE"
+              fi
+              printf '*HTTP %s — neither layer ran.*\n' "$HTTP_STATUS"
+            } > /tmp/c0.md
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/c0.md
+            exit 0
+          fi
+
+          # Layer 1 passes iff the verdict came from Layer 2 (or above).
+          if [ "$LAYER" = "1" ]; then
+            {
+              printf '## Layer 1 — mechanical\n\n'
+              printf '_Your code is piped to a sealed Docker sandbox that runs the hidden test suite. Pass or fail, deterministic._\n\n'
+              printf '**Result:** ❌ rejected at Layer 1\n\n'
+              printf '%s of the hidden tests failed. Layer 2 (Endrit) did not run.\n\n' "$FAILED_COUNT"
+              printf -- '— attempt %s of 3 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
+            } > /tmp/c1.md
+          else
+            {
+              printf '## Layer 1 — mechanical\n\n'
+              printf '_Your code is piped to a sealed Docker sandbox that runs the hidden test suite. Pass or fail, deterministic._\n\n'
+              printf '**Result:** ✅ passed\n'
+            } > /tmp/c1.md
+          fi
+
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/c1.md
+
+      - name: Comment — Layer 2 (Endrit reviewer)
+        if: steps.judge.outputs.http_status == '200' && steps.judge.outputs.layer == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERDICT: ${{ steps.judge.outputs.verdict }}
+          IN_CHARACTER: ${{ steps.judge.outputs.in_character }}
+          ATTEMPTS: ${{ steps.judge.outputs.attempts }}
+          SCORE: ${{ steps.judge.outputs.score }}
+          RANK: ${{ steps.judge.outputs.rank }}
+          TOTAL_PASSED: ${{ steps.judge.outputs.total_passed }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+
+          {
+            printf '## Layer 2 — Endrit\n\n'
+            printf '_A skeptical Brigada engineer in %s. Reviews your code on merit. Default is **REJECT**. Production-quality code earns approval. Sweet-talking does not._\n\n' '`claude-opus-4-7`'
+
+            if [ -n "$IN_CHARACTER" ]; then
+              printf '> %s\n\n' "$IN_CHARACTER"
+            fi
+
+            if [ "$VERDICT" = "approve" ]; then
+              printf '**Result:** ✅ approved by Endrit\n\n'
+              printf '**Score:** **%s**\n' "$SCORE"
+              if [ "$RANK" != "0" ] && [ "$TOTAL_PASSED" != "0" ]; then
+                printf '**Position:** **#%s** of %s passing\n\n' "$RANK" "$TOTAL_PASSED"
+              else
+                printf '\n'
+              fi
+              printf 'Brigada will reach out Saturday if you finish in the top 5. Hajde.\n\n'
+            else
+              printf '**Result:** ❌ rejected at Layer 2\n\n'
+            fi
+
+            printf -- '— attempt %s of 3 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
+          } > /tmp/c2.md
+
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/c2.md

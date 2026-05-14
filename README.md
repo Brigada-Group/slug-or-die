@@ -6,7 +6,7 @@ Fix `Brigada\Support\Slug::make()`. Win a Brigada interview.
 
 - Closes **Fri 2026-05-15 23:59 Europe/Tirane**.
 - Top 5 by score get an interview DM Saturday. If fewer than 5 pass, every passer gets one.
-- Three attempts per GitHub account. Account must be ≥ 90 days old. PARTIAL verdicts (see Layer 2) cost half an attempt — if every verdict is PARTIAL you can submit up to six issues.
+- Five attempts per GitHub account. Account must be ≥ 90 days old. PARTIAL verdicts (see Layer 2) cost half an attempt — if every verdict is PARTIAL you can submit up to ten issues.
 
 ## How to submit
 
@@ -72,6 +72,6 @@ When all 3 pass locally, you have a reasonable submission — but local passing 
 
 ## Submit
 
-[**Open a new submission issue**](https://github.com/Brigada-Group/slug-or-die/issues/new?template=submission.yml). Three attempts per handle, ever. Spend them like Endrit is reading.
+[**Open a new submission issue**](https://github.com/Brigada-Group/slug-or-die/issues/new?template=submission.yml). Five attempts per handle, ever. Spend them like Endrit is reading.
 
 — Brigada

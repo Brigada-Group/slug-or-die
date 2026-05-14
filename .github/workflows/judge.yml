@@ -135,7 +135,7 @@ jobs:
               printf '_Your code is piped to a sealed Docker sandbox that runs the hidden test suite. Pass or fail, deterministic._\n\n'
               printf '**Result:** ❌ rejected at Layer 1\n\n'
               printf '%s of the hidden tests failed. Layer 2 (Endrit) did not run.\n\n' "$FAILED_COUNT"
-              printf -- '— attempt %s of 3 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
+              printf -- '— attempt %s of 5 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
             } > /tmp/c1.md
           else
             {
@@ -182,7 +182,7 @@ jobs:
               printf '**Result:** ❌ rejected at Layer 2\n\n'
             fi
 
-            printf -- '— attempt %s of 3 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
+            printf -- '— attempt %s of 5 · [leaderboard](https://brigada.dev/join)\n' "$ATTEMPTS"
           } > /tmp/c2.md
 
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/c2.md

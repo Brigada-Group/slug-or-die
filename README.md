@@ -4,7 +4,7 @@ Fix `Brigada\Support\Slug::make()`. Win a Brigada interview.
 
 ## The contest
 
-- Closes **Fri 2026-05-15 23:59 Europe/Tirane**.
+- Closes **Fri 2026-05-22 23:59 Europe/Tirane**.
 - Top 5 by score get an interview DM Saturday. If fewer than 5 pass, every passer gets one.
 - Five attempts per GitHub account. Account must be ≥ 90 days old. PARTIAL verdicts (see Layer 2) cost half an attempt — if every verdict is PARTIAL you can submit up to ten issues.
 

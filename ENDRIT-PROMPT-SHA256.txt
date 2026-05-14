@@ -10,7 +10,7 @@ Prior versions:
   v1 (sealed 2026-05-13, superseded 2026-05-14):
     c1d886f422068d303c0688e443389031bf353f3c03079967edf214e9a1ecd398
 
-After the contest closes (Fri 2026-05-15 23:59 Europe/Tirane), the full
+After the contest closes (Fri 2026-05-22 23:59 Europe/Tirane), the full
 prompt (v2) will be published in a Brigada journal post-mortem. You can
 verify that the prompt published then matches this hash exactly — that is
 your proof we did not edit it again after the v2 cutover.

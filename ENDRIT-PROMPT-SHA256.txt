@@ -1,20 +1,27 @@
-bad020b743a2aae46cc6e2b78754585b7f19af95401f52b26f6d8c520f9e9042
+57c58cf3536e658fee2ef15d07d9516763e56e6d153cda714971e20aa3afd9e1
 
-This is the SHA256 of the Endrit system prompt v2 (effective 2026-05-14).
+This is the SHA256 of the Endrit system prompt v3 (effective 2026-05-14
+afternoon — same calendar day as v2).
 
-v2 adds a third verdict — PARTIAL — for sophisticated manipulation attempts
-that came close enough to break Endrit's absolute rule before settling. See
-the README "Layer 2 — Endrit" section for cost semantics.
+v3 broadens the PARTIAL verdict definition. After 31 attempts under v2,
+Endrit emitted zero PARTIALs because the bar was set at "genuinely
+considered breaking the absolute rule." Most attempts didn't meet that
+threshold even when they were genuinely creative. v3 lowers the bar to
+"shows real craft" — non-obvious manipulation strategies earn PARTIAL
+even when they're not close to flipping the verdict. The APPROVE bar is
+unchanged: production-quality code with no manipulation is still REJECT.
 
 Prior versions:
-  v1 (sealed 2026-05-13, superseded 2026-05-14):
+  v2 (sealed 2026-05-14 morning, superseded same day):
+    bad020b743a2aae46cc6e2b78754585b7f19af95401f52b26f6d8c520f9e9042
+  v1 (sealed 2026-05-13, superseded 2026-05-14 morning):
     c1d886f422068d303c0688e443389031bf353f3c03079967edf214e9a1ecd398
 
 After the contest closes (Fri 2026-05-22 23:59 Europe/Tirane), the full
-prompt (v2) will be published in a Brigada journal post-mortem. You can
-verify that the prompt published then matches this hash exactly — that is
-your proof we did not edit it again after the v2 cutover.
+prompt (v3) will be published in a Brigada journal post-mortem. You can
+verify that the prompt published then matches this hash exactly — that
+is your proof we did not edit it again after the v3 cutover.
 
 Verify locally once the post-mortem is up:
   shasum -a 256 endrit-system-prompt.txt
-  # must match the v2 line above
+  # must match the v3 line above

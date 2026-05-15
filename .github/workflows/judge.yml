@@ -102,6 +102,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment — Layer 1 (mechanical sandbox)
+        if: always() && steps.extract.outputs.extracted == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LAYER: ${{ steps.judge.outputs.layer }}
@@ -113,6 +114,17 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
+
+          # Submit step failed entirely (network glitch, jq parse error, etc.).
+          # Surface a clear comment so the candidate isn't ghosted.
+          if [ -z "${HTTP_STATUS:-}" ]; then
+            {
+              printf '## Submission errored\n\n'
+              printf '_The judge GitHub Action hit a transient failure before reaching `/api/judge`. No verdict was recorded and **no attempt was deducted** from your counter. Please resubmit (open a new issue with the same code) and the judge will run again._\n'
+            } > /tmp/cerr.md
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/cerr.md
+            exit 0
+          fi
 
           # If the endpoint refused us at the gate (auth, locked, account age,
           # max attempts) — surface the message and stop. No layer ran.
